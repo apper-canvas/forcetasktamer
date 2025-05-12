@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 import getIcon from '../utils/iconUtils';
 
 const MainFeature = () => {
@@ -19,6 +20,7 @@ const MainFeature = () => {
   const FilterIcon = getIcon("Filter");
   const SortIcon = getIcon("ArrowUpDown");
   const ChevronDownIcon = getIcon("ChevronDown");
+  const FolderIcon = getIcon("Folder");
   const XCircleIcon = getIcon("XCircle");
 
   // State for tasks
@@ -42,7 +44,8 @@ const MainFeature = () => {
         createdAt: new Date().toISOString(),
         dueDate: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(),
         priority: 'high',
-        category: 'work'
+        category: 'work',
+        projectId: '2'
       },
       { 
         id: '2', 
@@ -51,7 +54,8 @@ const MainFeature = () => {
         createdAt: new Date().toISOString(),
         dueDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString(),
         priority: 'medium',
-        category: 'personal'
+        category: 'personal',
+        projectId: '1'
       },
       { 
         id: '3', 
@@ -60,10 +64,13 @@ const MainFeature = () => {
         createdAt: new Date().toISOString(),
         dueDate: new Date().toISOString(),
         priority: 'low',
-        category: 'health'
+        category: 'health',
+        projectId: '1'
       }
     ];
   });
+
+  const projects = useSelector(state => state.projects.list);
 
   // State for new task form
   const [newTask, setNewTask] = useState({
@@ -80,6 +87,7 @@ const MainFeature = () => {
   const [viewTaskId, setViewTaskId] = useState(null);
   const [sortOption, setSortOption] = useState('dueDate');
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
+  const [projectFilterMenuOpen, setProjectFilterMenuOpen] = useState(false);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [categoryColors] = useState({
     work: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -87,6 +95,13 @@ const MainFeature = () => {
     health: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     finance: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
     other: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+  });
+  const [projectColors] = useState({
+    blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    purple: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+    amber: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+    default: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   });
   
   // Save tasks to localStorage whenever they change
@@ -118,7 +133,8 @@ const MainFeature = () => {
             title: newTask.title,
             dueDate: new Date(`${newTask.dueDate}T12:00:00`).toISOString(),
             priority: newTask.priority,
-            category: newTask.category
+            category: newTask.category,
+            projectId: newTask.projectId
           } : task
       ));
       
@@ -133,7 +149,8 @@ const MainFeature = () => {
         createdAt: new Date().toISOString(),
         dueDate: new Date(`${newTask.dueDate}T12:00:00`).toISOString(),
         priority: newTask.priority,
-        category: newTask.category
+        category: newTask.category,
+        projectId: newTask.projectId || '1' // Default to first project if none selected
       };
       
       setTasks([...tasks, newTaskObj]);
@@ -145,7 +162,8 @@ const MainFeature = () => {
       title: '',
       dueDate: format(new Date(), 'yyyy-MM-dd'),
       priority: 'medium',
-      category: 'personal'
+      category: 'personal',
+      projectId: '1'
     });
     
     setIsFormVisible(false);
@@ -182,7 +200,8 @@ const MainFeature = () => {
       title: task.title,
       dueDate: format(new Date(task.dueDate), 'yyyy-MM-dd'),
       priority: task.priority,
-      category: task.category || 'personal'
+      category: task.category || 'personal',
+      projectId: task.projectId || '1'
     });
     
     setEditingTaskId(task.id);
@@ -215,6 +234,14 @@ const MainFeature = () => {
       case 'overdue':
         filtered = filtered.filter(task => !task.completed && isPast(new Date(task.dueDate)));
         break;
+      // Project filtering
+      case 'project':
+        if (filter.startsWith('project:')) {
+          const projectId = filter.split(':')[1];
+          filtered = filtered.filter(task => task.projectId === projectId);
+        }
+        break;
+      // Priority filtering
       case 'high':
         filtered = filtered.filter(task => task.priority === 'high');
         break;
@@ -244,6 +271,13 @@ const MainFeature = () => {
     setFilter(selectedFilter);
     setFilterMenuOpen(false);
     toast.info(`Showing ${selectedFilter} tasks`);
+  };
+
+  const handleProjectFilterSelect = (projectId) => {
+    const projectName = projects.find(p => p.id === projectId)?.name || 'Unknown';
+    setFilter(`project:${projectId}`);
+    setProjectFilterMenuOpen(false);
+    toast.info(`Showing ${projectName} project tasks`);
   };
 
   const handleSortSelect = (selectedSort) => {
@@ -276,6 +310,15 @@ const MainFeature = () => {
     };
     return {
       className: classes[priority] || classes.medium
+    };
+  };
+  
+  // Function to get project by id
+  const getProject = (projectId) => {
+    return projects.find(p => p.id === projectId) || { 
+      id: 'default', 
+      name: 'No Project', 
+      color: 'default' 
     };
   };
 
@@ -324,7 +367,8 @@ const MainFeature = () => {
       title: task.title,
       dueDate: format(new Date(task.dueDate), 'yyyy-MM-dd'),
       priority: task.priority,
-      category: task.category || 'personal'
+      category: task.category || 'personal',
+      projectId: task.projectId || '1'
     });
 
     // Handle input changes within the modal
@@ -348,7 +392,8 @@ const MainFeature = () => {
         title: editedTask.title,
         dueDate: new Date(`${editedTask.dueDate}T12:00:00`).toISOString(),
         priority: editedTask.priority,
-        category: editedTask.category
+        category: editedTask.category,
+        projectId: editedTask.projectId
       };
       
       onSave(updatedTask);
@@ -395,7 +440,7 @@ const MainFeature = () => {
               />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div className="modal-field-container">
                 {/* Same fields as original form but with different IDs and onChange handler */}
                 <label htmlFor="modal-dueDate" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
@@ -444,7 +489,7 @@ const MainFeature = () => {
                 </label>
                 <select
                   id="modal-category"
-                  name="category"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   value={editedTask.category}
                   onChange={handleModalInputChange}
                   className="w-full p-3 border border-surface-300 dark:border-surface-600 rounded-lg"
@@ -462,6 +507,26 @@ const MainFeature = () => {
               <button
                 type="button"
                 className="btn btn-outline"
+              
+              <div className="modal-field-container">
+                <label htmlFor="modal-project" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                  Project
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
+                    <FolderIcon className="w-5 h-5" />
+                  </div>
+                  <select
+                    id="modal-project"
+                    name="projectId"
+                    value={editedTask.projectId || ''}
+                    onChange={handleModalInputChange}
+                    className="w-full p-3 pl-10 border border-surface-300 dark:border-surface-600 rounded-lg appearance-none"
+                  >
+                    {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
+                  </select>
+                </div>
+              </div>
                 onClick={onClose}
               >
                 Cancel
@@ -521,6 +586,49 @@ const MainFeature = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3 order-2 sm:order-1">
           {/* Filter dropdown */}
+          <div className="relative">
+            <button 
+              className="btn btn-outline flex items-center gap-2"
+              onClick={() => setProjectFilterMenuOpen(!projectFilterMenuOpen)}
+            >
+              <FolderIcon className="w-4 h-4" />
+              <span>
+                {filter.startsWith('project:') 
+                  ? getProject(filter.split(':')[1]).name
+                  : 'All Projects'}
+              </span>
+              <ChevronDownIcon className="w-4 h-4" />
+            </button>
+            
+            {projectFilterMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute left-0 mt-2 w-48 bg-white dark:bg-surface-800 rounded-lg shadow-lg py-2 z-10"
+              >
+                <button
+                  className={`w-full text-left px-4 py-2 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors
+                            ${filter === 'all' ? 'bg-primary/10 text-primary dark:bg-primary/20' : ''}`}
+                  onClick={() => handleFilterSelect('all')}
+                >
+                  All Projects
+                </button>
+                {projects.map(project => (
+                  <button
+                    key={project.id}
+                    className={`w-full text-left px-4 py-2 hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors flex items-center gap-2
+                              ${filter === `project:${project.id}` ? 'bg-primary/10 text-primary dark:bg-primary/20' : ''}`}
+                    onClick={() => handleProjectFilterSelect(project.id)}
+                  >
+                    <span className={`w-3 h-3 rounded-full ${projectColors[project.color] || projectColors.default}`}></span>
+                    {project.name}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </div>
+          
           <div className="relative">
             <button 
               className="btn btn-outline flex items-center gap-2"
@@ -602,7 +710,8 @@ const MainFeature = () => {
               title: '',
               dueDate: format(new Date(), 'yyyy-MM-dd'),
               priority: 'medium',
-              category: 'personal'
+              category: 'personal',
+              projectId: '1'
             });
             setIsFormVisible(!isFormVisible);
           }}
@@ -652,7 +761,7 @@ const MainFeature = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div>
                   <label htmlFor="dueDate" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
                     Due Date
@@ -712,6 +821,33 @@ const MainFeature = () => {
                     <option value="other">Other</option>
                   </select>
                 </div>
+
+            <div className="mb-6">
+              <label htmlFor="project" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                Project
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
+                  <FolderIcon className="w-5 h-5" />
+                </div>
+                <select
+                  id="project"
+                  name="projectId"
+                  value={newTask.projectId || ''}
+                  onChange={handleInputChange}
+                  className="w-full p-3 pl-10 border border-surface-300 dark:border-surface-600 rounded-lg appearance-none"
+                >
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className="mt-1 text-xs text-surface-500 dark:text-surface-400">
+                Assign this task to a project to organize your work
+              </p>
+            </div>
               </div>
               
               <div className="flex justify-end gap-3">
@@ -793,9 +929,17 @@ const MainFeature = () => {
                         </span>
                         
                         {/* Category tag */}
-                        <span className={`text-sm px-2 py-1 rounded-full ${categoryColors[task.category] || categoryColors.other}`}>
+                        <span className={`text-sm px-2 py-1 rounded-full ${categoryColors[task.category] || categoryColors.other} mr-1`}>
                           {task.category}
                         </span>
+                        
+                        {/* Project tag */}
+                        {task.projectId && (
+                          <span className={`text-sm px-2 py-1 rounded-full flex items-center gap-1 ${projectColors[getProject(task.projectId).color] || projectColors.default}`}>
+                            <FolderIcon className="w-3 h-3" />
+                            {getProject(task.projectId).name}
+                          </span>
+                        )}
                       </div>
                     </div>
                     
@@ -867,6 +1011,7 @@ const MainFeature = () => {
                 setNewTask({
                   title: '',
                   dueDate: format(new Date(), 'yyyy-MM-dd'),
+                  projectId: '1'
                   priority: 'medium',
                   category: 'personal'
                 });
