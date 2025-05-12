@@ -224,8 +224,9 @@ const MainFeature = () => {
 
   // Filter tasks based on current filter
   const getFilteredTasks = () => {
-    let filtered = [...tasks];
+    let filtered = [...tasks]; 
     
+    // Handle standard filters
     switch (filter) {
       case 'completed':
         filtered = filtered.filter(task => task.completed);
@@ -242,16 +243,17 @@ const MainFeature = () => {
       case 'overdue':
         filtered = filtered.filter(task => !task.completed && isPast(new Date(task.dueDate)));
         break;
-      // Project filtering
-      default:
-        if (filter && filter.startsWith('project:')) {
-          const projectId = filter.split(':')[1];
-          filtered = filtered.filter(task => task.projectId === projectId);
-        }
-      // Priority filtering
       case 'high':
         filtered = filtered.filter(task => task.priority === 'high');
         break;
+      default:
+        break;
+    }
+    
+    // Handle project filtering separately
+    if (filter && filter.startsWith('project:')) {
+      const projectId = filter.split(':')[1];
+      filtered = filtered.filter(task => task.projectId === projectId);
     }
     
     // Sort tasks
