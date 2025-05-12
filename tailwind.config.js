@@ -46,14 +46,16 @@ export default {
         '2xl': '1rem'
       }
     },
-    animation: {
-      'fade-in': 'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-      'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+    extend: {
+      animation: {
+        'fade-in': 'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+      },
+      keyframes: {
+        'modal-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        'zoom-in': { '0%': { transform: 'scale(0.95)' }, '100%': { transform: 'scale(1)' } }
+      }
     }
   },
-  plugins: [
-    // Add animation utilities
-    require('@tailwindcss/animation')
-  ],
   darkMode: 'class',
 }
