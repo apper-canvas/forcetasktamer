@@ -489,7 +489,6 @@ const MainFeature = () => {
                 </label>
                 <select
                   id="modal-category"
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                   value={editedTask.category}
                   onChange={handleModalInputChange}
                   className="w-full p-3 border border-surface-300 dark:border-surface-600 rounded-lg"
@@ -503,7 +502,7 @@ const MainFeature = () => {
               </div>
             </div>
             
-            <div className="flex justify-end gap-3">
+            <div className="mb-6">
               <button
                 type="button"
                 className="btn btn-outline"
@@ -526,7 +525,9 @@ const MainFeature = () => {
                     {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
                   </select>
                 </div>
-              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
                 onClick={onClose}
               >
                 Cancel
@@ -897,7 +898,6 @@ const MainFeature = () => {
                   layout
                   className={`p-4 sm:p-5 flex items-start gap-3 group ${task.completed ? 'bg-surface-50 dark:bg-surface-800/50' : ''} cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700`}
                   onClick={() => viewTask(task)}
-                  onClick={() => viewTask(task)}
                 >
                   {/* Checkbox */}
                   <button
@@ -1010,8 +1010,8 @@ const MainFeature = () => {
                 setEditingTaskId(null);
                 setNewTask({
                   title: '',
-                  dueDate: format(new Date(), 'yyyy-MM-dd'),
-                  projectId: '1'
+                                  dueDate: format(new Date(), 'yyyy-MM-dd'),  
+                                  projectId: '1',
                   priority: 'medium',
                   category: 'personal'
                 });
