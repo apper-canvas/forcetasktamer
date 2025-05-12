@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
-import { toast } from 'react-toastify';
+import { toast } from 'react-toastify'; 
 import { useSelector } from 'react-redux';
 import getIcon from '../utils/iconUtils';
 
@@ -22,6 +22,7 @@ const MainFeature = () => {
   const ChevronDownIcon = getIcon("ChevronDown");
   const FolderIcon = getIcon("Folder");
   const XCircleIcon = getIcon("XCircle");
+  const PlusCircleIcon = getIcon("PlusCircle");
 
   // State for tasks
   const [tasks, setTasks] = useState(() => {
@@ -71,6 +72,13 @@ const MainFeature = () => {
   });
 
   const projects = useSelector(state => state.projects.list);
+
+  // Project modal state
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    color: 'blue'
+  });
 
   // State for new task form
   const [newTask, setNewTask] = useState({
@@ -284,6 +292,26 @@ const MainFeature = () => {
     setSortOption(selectedSort);
     setSortMenuOpen(false);
     toast.info(`Sorted by ${selectedSort}`);
+  };
+  
+  // Handle opening the project modal
+  const handleOpenProjectModal = (e) => {
+    e.stopPropagation();
+    setProjectFilterMenuOpen(false);
+    setIsProjectModalOpen(true);
+    setNewProject({
+      name: '',
+      color: 'blue'
+    });
+  };
+
+  // Handle closing the project modal
+  const handleCloseProjectModal = () => {
+    setIsProjectModalOpen(false);
+    setNewProject({
+      name: '',
+      color: 'blue'
+    });
   };
 
   // Function to get appropriate classes for due date display
@@ -542,6 +570,127 @@ const MainFeature = () => {
     );
   };
 
+  // ProjectModal component
+  const ProjectModal = ({ onClose, project = null }) => {
+    const [projectData, setProjectData] = useState(
+      project || {
+        name: '',
+        color: 'blue'
+      }
+    );
+    const [nameError, setNameError] = useState('');
+    const dispatch = useSelector(() => useDispatch());
+    const availableColors = ['blue', 'green', 'purple', 'amber', 'rose', 'cyan', 'lime', 'indigo', 'pink'];
+
+    // Check if project name already exists
+    const checkNameExists = (name) => {
+      return projects.some(p => 
+        p.id !== (project?.id || '') && 
+        p.name.toLowerCase() === name.toLowerCase()
+      );
+    };
+
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      setProjectData(prev => ({ ...prev, [name]: value }));
+      
+      // Clear error when typing in name field
+      if (name === 'name') {
+        setNameError('');
+      }
+    };
+
+    const handleColorSelect = (color) => {
+      setProjectData(prev => ({ ...prev, color }));
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      
+      // Validate
+      if (!projectData.name.trim()) {
+        setNameError('Project name is required');
+        return;
+      }
+      
+      if (checkNameExists(projectData.name)) {
+        setNameError('A project with this name already exists');
+        return;
+      }
+      
+      // Create new project
+      const newProjectData = {
+        id: Date.now().toString(),
+        name: projectData.name.trim(),
+        color: projectData.color
+      };
+      
+      dispatch({ type: 'projects/addProject', payload: newProjectData });
+      toast.success(`Project "${newProjectData.name}" created!`);
+      onClose();
+    };
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container" onClick={e => e.stopPropagation()}>
+          <form onSubmit={handleSubmit} className="p-6 bg-white dark:bg-surface-800 rounded-xl shadow-lg max-w-lg w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-surface-800 dark:text-surface-100">Create Project</h2>
+              <button type="button" onClick={onClose} className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300">
+                <XCircleIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <label htmlFor="project-name" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                Project Name
+              </label>
+              <input
+                type="text"
+                id="project-name"
+                name="name"
+                value={projectData.name}
+                onChange={handleInputChange}
+                className={`w-full p-3 border ${nameError ? 'border-red-500' : 'border-surface-300 dark:border-surface-600'} rounded-lg`}
+                autoFocus
+                placeholder="Enter project name"
+              />
+              {nameError && <p className="mt-1 text-sm text-red-500">{nameError}</p>}
+            </div>
+            
+            <div className="mb-6">
+              <label className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                Project Color
+              </label>
+              <div className="color-selector-grid">
+                {availableColors.map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`color-option bg-${color}-500 ${projectData.color === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                    onClick={() => handleColorSelect(color)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button type="button" className="btn btn-outline" onClick={onClose}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   const filteredTasks = getFilteredTasks();
   const completedCount = tasks.filter(t => t.completed).length;
   const totalTasks = tasks.length;
@@ -612,6 +761,17 @@ const MainFeature = () => {
                 >
                   All Projects
                 </button>
+                <div className="px-4 py-2 border-t border-surface-200 dark:border-surface-600">
+                  <button
+                    className="w-full text-left py-2 px-3 rounded bg-primary/10 text-primary flex items-center gap-2 
+                              hover:bg-primary/20 transition-colors"
+                    onClick={handleOpenProjectModal}
+                  >
+                    <PlusCircleIcon className="w-4 h-4" />
+                    <span>Create Project</span>
+                  </button>
+                </div>
+                
                 {projects.map(project => (
                   <button
                     key={project.id}
@@ -1034,6 +1194,15 @@ const MainFeature = () => {
             }}
           />
 
+        )}
+      </AnimatePresence>
+      
+      {/* Project Creation Modal */}
+      <AnimatePresence>
+        {isProjectModalOpen && (
+          <ProjectModal 
+            onClose={handleCloseProjectModal}
+          />
         )}
       </AnimatePresence>
     </div>

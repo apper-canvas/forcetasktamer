@@ -1,8 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { Provider } from 'react-redux'
-import { configureStore, createSlice } from '@reduxjs/toolkit'
+import { Provider, useDispatch } from 'react-redux'
+import { configureStore, createSlice, createSelector } from '@reduxjs/toolkit'
 import App from './App.jsx'
 import './index.css'
 
@@ -32,6 +32,8 @@ const projectsSlice = createSlice({
     }
   }
 })
+
+export const { addProject, updateProject, deleteProject } = projectsSlice.actions;
 
 // Create store
 const store = configureStore({
