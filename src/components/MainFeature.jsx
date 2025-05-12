@@ -506,12 +506,7 @@ const MainFeature = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="modal-field-container">
                 <label htmlFor="modal-project" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
-                  Project
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
-                    <FolderIcon className="w-5 h-5" />
-                </label>
+                  Project</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
                     <FolderIcon className="w-5 h-5" />
@@ -527,11 +522,11 @@ const MainFeature = () => {
                   </select>
                 </div>
               </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">
               <button type="button" className="btn btn-outline" onClick={onClose}>
-              >
                 Cancel
               </button>
               <button
