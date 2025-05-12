@@ -97,9 +97,9 @@
   }
   
   .modal-container {
-    @apply animate-in fade-in zoom-in-95 duration-200 
-           max-h-[90vh] overflow-y-auto w-full max-w-xl
-           rounded-xl shadow-xl;
+    @apply opacity-0 scale-95 animate-fade-in
+          max-h-[90vh] overflow-y-auto w-full max-w-xl
+          rounded-xl shadow-xl;
   }
   
   /* Animation classes */

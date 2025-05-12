@@ -45,8 +45,15 @@ export default {
         'xl': '0.75rem',
         '2xl': '1rem'
       }
+    },
+    animation: {
+      'fade-in': 'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+      'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }
   },
-  plugins: [],
+  plugins: [
+    // Add animation utilities
+    require('@tailwindcss/animation')
+  ],
   darkMode: 'class',
 }
