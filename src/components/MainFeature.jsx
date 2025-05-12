@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
 import { toast } from 'react-toastify'; 
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import getIcon from '../utils/iconUtils';
 
 const MainFeature = () => {
@@ -579,7 +579,7 @@ const MainFeature = () => {
       }
     );
     const [nameError, setNameError] = useState('');
-    const dispatch = useSelector(() => useDispatch());
+    const dispatch = useDispatch();
     const availableColors = ['blue', 'green', 'purple', 'amber', 'rose', 'cyan', 'lime', 'indigo', 'pink'];
 
     // Check if project name already exists
