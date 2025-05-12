@@ -89,6 +89,23 @@
   .priority-low {
     @apply text-green-500;
   }
+
+  /* Modal styles */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 
+           flex items-center justify-center z-50 p-4;
+  }
+  
+  .modal-container {
+    @apply animate-in fade-in zoom-in-95 duration-200 
+           max-h-[90vh] overflow-y-auto w-full max-w-xl
+           rounded-xl shadow-xl;
+  }
+  
+  /* Animation classes */
+  .animate-in {
+    animation: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 @layer utilities {
@@ -107,4 +124,18 @@
   .text-shadow-none {
     text-shadow: none;
   }
+  
+  /* Click-through prevention */
+  .no-click-through {
+    pointer-events: none;
+  }
+  
+  .clickable {
+    pointer-events: auto;
+  }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }

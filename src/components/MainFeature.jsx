@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { format, parseISO, isToday, isTomorrow, isPast } from 'date-fns';
 import { toast } from 'react-toastify';
 import getIcon from '../utils/iconUtils';
@@ -19,6 +19,7 @@ const MainFeature = () => {
   const FilterIcon = getIcon("Filter");
   const SortIcon = getIcon("ArrowUpDown");
   const ChevronDownIcon = getIcon("ChevronDown");
+  const XCircleIcon = getIcon("XCircle");
 
   // State for tasks
   const [tasks, setTasks] = useState(() => {
@@ -76,6 +77,7 @@ const MainFeature = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [viewTaskId, setViewTaskId] = useState(null);
   const [sortOption, setSortOption] = useState('dueDate');
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
@@ -171,6 +173,11 @@ const MainFeature = () => {
 
   // Edit a task
   const startEditing = (task) => {
+    if (viewTaskId) {
+      setViewTaskId(null);
+    }
+    
+    // Set up form with task data
     setNewTask({
       title: task.title,
       dueDate: format(new Date(task.dueDate), 'yyyy-MM-dd'),
@@ -180,6 +187,12 @@ const MainFeature = () => {
     
     setEditingTaskId(task.id);
     setIsFormVisible(true);
+  };
+  
+  // View a task (open edit modal)
+  const viewTask = (task) => {
+    setViewTaskId(task.id);
+    setIsFormVisible(false);
   };
 
   // Filter tasks based on current filter
@@ -303,6 +316,167 @@ const MainFeature = () => {
       opacity: 0,
       transition: { duration: 0.2 }
     }
+  };
+
+  // EditTaskModal component
+  const EditTaskModal = ({ task, onClose, onSave }) => {
+    const [editedTask, setEditedTask] = useState({
+      title: task.title,
+      dueDate: format(new Date(task.dueDate), 'yyyy-MM-dd'),
+      priority: task.priority,
+      category: task.category || 'personal'
+    });
+
+    // Handle input changes within the modal
+    const handleModalInputChange = (e) => {
+      const { name, value } = e.target;
+      setEditedTask(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Handle save button click
+    const handleModalSave = (e) => {
+      e.preventDefault();
+      
+      if (!editedTask.title.trim()) {
+        toast.error("Task title cannot be empty");
+        return;
+      }
+      
+      // Create updated task object
+      const updatedTask = {
+        ...task,
+        title: editedTask.title,
+        dueDate: new Date(`${editedTask.dueDate}T12:00:00`).toISOString(),
+        priority: editedTask.priority,
+        category: editedTask.category
+      };
+      
+      onSave(updatedTask);
+      onClose();
+    };
+
+    // Close modal when Escape key is pressed
+    useEffect(() => {
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+      };
+      
+      window.addEventListener('keydown', handleEsc);
+      return () => {
+        window.removeEventListener('keydown', handleEsc);
+      };
+    }, [onClose]);
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-container" onClick={e => e.stopPropagation()}>
+          <form onSubmit={handleModalSave} className="p-6 bg-white dark:bg-surface-800 rounded-xl shadow-lg max-w-lg w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-surface-800 dark:text-surface-100">Edit Task</h2>
+              <button type="button" onClick={onClose} className="text-surface-500 hover:text-surface-700 dark:hover:text-surface-300">
+                <XCircleIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <label htmlFor="modal-title" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                Task Title
+              </label>
+              <input
+                type="text"
+                id="modal-title"
+                name="title"
+                value={editedTask.title}
+                onChange={handleModalInputChange}
+                className="w-full p-3 border border-surface-300 dark:border-surface-600 rounded-lg"
+                autoFocus
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="modal-field-container">
+                {/* Same fields as original form but with different IDs and onChange handler */}
+                <label htmlFor="modal-dueDate" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                  Due Date
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
+                    <CalendarIcon className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="date"
+                    id="modal-dueDate"
+                    name="dueDate"
+                    value={editedTask.dueDate}
+                    onChange={handleModalInputChange}
+                    className="w-full p-3 pl-10 border border-surface-300 dark:border-surface-600 rounded-lg"
+                  />
+                </div>
+              </div>
+              
+              <div className="modal-field-container">
+                <label htmlFor="modal-priority" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                  Priority
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-surface-500">
+                    <FlagIcon className="w-5 h-5" />
+                  </div>
+                  <select
+                    id="modal-priority"
+                    name="priority"
+                    value={editedTask.priority}
+                    onChange={handleModalInputChange}
+                    className="w-full p-3 pl-10 border border-surface-300 dark:border-surface-600 rounded-lg appearance-none"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="modal-field-container">
+                <label htmlFor="modal-category" className="block mb-2 text-sm font-medium text-surface-700 dark:text-surface-300">
+                  Category
+                </label>
+                <select
+                  id="modal-category"
+                  name="category"
+                  value={editedTask.category}
+                  onChange={handleModalInputChange}
+                  className="w-full p-3 border border-surface-300 dark:border-surface-600 rounded-lg"
+                >
+                  <option value="personal">Personal</option>
+                  <option value="work">Work</option>
+                  <option value="health">Health</option>
+                  <option value="finance">Finance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={onClose}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
   };
 
   const filteredTasks = getFilteredTasks();
@@ -585,15 +759,19 @@ const MainFeature = () => {
                   animate="visible"
                   exit="exit"
                   layout
-                  className={`p-4 sm:p-5 flex items-start gap-3 group ${task.completed ? 'bg-surface-50 dark:bg-surface-800/50' : ''}`}
+                  className={`p-4 sm:p-5 flex items-start gap-3 group ${task.completed ? 'bg-surface-50 dark:bg-surface-800/50' : ''} cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700`}
+                  onClick={() => viewTask(task)}
                 >
                   {/* Checkbox */}
                   <button
-                    onClick={() => toggleComplete(task.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleComplete(task.id);
+                    }}
                     className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors
                                border-2 ${task.completed ? 
                                 'bg-primary border-primary text-white' : 
-                                'border-surface-300 dark:border-surface-600 hover:border-primary'}`}
+                                'border-surface-300 dark:border-surface-600 hover:border-primary hover:bg-surface-100'}`}
                     aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
                   >
                     {task.completed && <CheckIcon className="w-4 h-4" />}
@@ -640,15 +818,20 @@ const MainFeature = () => {
                   {/* Action buttons */}
                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => startEditing(task)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditing(task);
+                      }}
                       className="p-2 text-surface-500 hover:text-primary hover:bg-surface-100 dark:hover:bg-surface-700 rounded-full transition-colors"
                       aria-label="Edit task"
                     >
                       <EditIcon className="w-4 h-4" />
                     </button>
-                    
                     <button
-                      onClick={() => deleteTask(task.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTask(task.id);
+                      }}
                       className="p-2 text-surface-500 hover:text-red-500 hover:bg-surface-100 dark:hover:bg-surface-700 rounded-full transition-colors"
                       aria-label="Delete task"
                     >
@@ -696,6 +879,19 @@ const MainFeature = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Task Edit Modal */}
+      <AnimatePresence>
+        {viewTaskId && (
+          <EditTaskModal 
+            task={tasks.find(t => t.id === viewTaskId)} 
+            onClose={() => setViewTaskId(null)}
+            onSave={(updatedTask) => {
+              setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
