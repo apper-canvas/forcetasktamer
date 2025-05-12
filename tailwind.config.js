@@ -6,6 +6,14 @@ export default {
   ],
   theme: {
     extend: {
+      animation: {
+        'fade-in': 'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+      },
+      keyframes: {
+        'modal-in': { '0%': { opacity: '0', transform: 'scale(0.95)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
+        'zoom-in': { '0%': { transform: 'scale(0.95)' }, '100%': { transform: 'scale(1)' } }
+      },
       colors: {
         primary: {
           DEFAULT: '#3b82f6',
@@ -46,16 +54,6 @@ export default {
         '2xl': '1rem'
       }
     },
-    extend: {
-      animation: {
-        'fade-in': 'modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        'zoom-in': 'zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-      },
-      keyframes: {
-        'modal-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-        'zoom-in': { '0%': { transform: 'scale(0.95)' }, '100%': { transform: 'scale(1)' } }
-      }
-    }
   },
   darkMode: 'class',
 }

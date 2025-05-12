@@ -761,6 +761,7 @@ const MainFeature = () => {
                   layout
                   className={`p-4 sm:p-5 flex items-start gap-3 group ${task.completed ? 'bg-surface-50 dark:bg-surface-800/50' : ''} cursor-pointer hover:bg-surface-100 dark:hover:bg-surface-700`}
                   onClick={() => viewTask(task)}
+                  onClick={() => viewTask(task)}
                 >
                   {/* Checkbox */}
                   <button
@@ -890,6 +891,7 @@ const MainFeature = () => {
               setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
             }}
           />
+
         )}
       </AnimatePresence>
     </div>

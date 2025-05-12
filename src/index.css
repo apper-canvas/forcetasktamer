@@ -97,9 +97,9 @@
   }
   
   .modal-container {
-    @apply opacity-0 scale-95 animate-fade-in
-          max-h-[90vh] overflow-y-auto w-full max-w-xl
-          rounded-xl shadow-xl;
+    @apply animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]
+           max-h-[90vh] overflow-y-auto w-full max-w-xl
+           rounded-xl shadow-xl bg-white dark:bg-surface-800;
   }
   
   /* Animation classes */
