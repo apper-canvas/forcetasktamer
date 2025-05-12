@@ -243,17 +243,14 @@ const MainFeature = () => {
         filtered = filtered.filter(task => !task.completed && isPast(new Date(task.dueDate)));
         break;
       // Project filtering
-      case 'project':
-        if (filter.startsWith('project:')) {
+      default:
+        if (filter && filter.startsWith('project:')) {
           const projectId = filter.split(':')[1];
           filtered = filtered.filter(task => task.projectId === projectId);
         }
-        break;
       // Priority filtering
       case 'high':
         filtered = filtered.filter(task => task.priority === 'high');
-        break;
-      default:
         break;
     }
     
